@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensaje Secreto para Zacni</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        h2 {
+            margin-top: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+        }
+        .word {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: grab;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            user-select: none;
+            touch-action: none;
+        }
+        .drop-zone {
+            width: 80%;
+            min-height: 100px;
+            margin: 20px auto;
+            border: 2px dashed white;
+            border-radius: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+        .drop-zone.highlight {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .button {
+            background: #ff6b81;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #ff4757;
+        }
+        .effect {
+            animation: glow 1s infinite alternate;
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px gold; }
+            to { text-shadow: 0 0 20px gold; }
+        }
+        #message {
+            font-size: 1.2rem;
+            margin-top: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        .heart {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: red;
+            transform: rotate(-45deg);
+            animation: float 3s ease-in-out infinite;
+        }
+        .heart::before, .heart::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: red;
+            border-radius: 50%;
+        }
+        .heart::before {
+            top: -10px;
+            left: 0;
+        }
+        .heart::after {
+            top: 0;
+            left: -10px;
+        }
+        @keyframes float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(-45deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) rotate(-45deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Arrastra o toca las palabras para formar el mensaje</h2>
+    <div class="container" id="words-container"></div>
+    <div class="drop-zone" id="drop-zone">Suelta o toca aquí</div>
+    
+    <div class="button-container">
+        <button class="button" id="reset-button">Desacomodar</button>
+        <button class="button" id="check-button">Comprobar</button>
+    </div>
+
+    <p id="message"></p>
+
+    <script>
+        const phrases = [
+            "Zacni, eres la pieza que completa mi mundo.",
+            "Así como las palabras se unen, mi corazón late contigo."
+        ];
+        let currentPhraseIndex = 0;
+        const wordsContainer = document.getElementById("words-container");
+        const dropZone = document.getElementById("drop-zone");
+        const resetButton = document.getElementById("reset-button");
+        const checkButton = document.getElementById("check-button");
+        const message = document.getElementById("message");
+
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+
+                [array[currentIndex], array[randomIndex]] = [
+                    array[randomIndex], array[currentIndex]];
+            }
+
+            if (array.join(" ") === phrases[currentPhraseIndex]) {
+                return shuffle(array);
+            }
+            return array;
+        }
+
+        function createWordElement(word) {
+            let span = document.createElement("span");
+            span.textContent = word;
+            span.classList.add("word");
+            span.draggable = true;
+
+            span.addEventListener("dragstart", (e) => {
+                e.dataTransfer.setData("text", word);
+                setTimeout(() => span.classList.add("hidden"), 0);
+            });
+
+            span.addEventListener("dragend", () => {
+                span.classList.remove("hidden");
+            });
+
+            span.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                moveToDropZone(span);
+            });
+
+            return span;
+        }
+
+        function initializeWords() {
+            wordsContainer.innerHTML = "";
+            shuffle(phrases[currentPhraseIndex].split(" ")).forEach(word => {
+                wordsContainer.appendChild(createWordElement(word));
+            });
+            dropZone.innerHTML = "";
+            message.textContent = "";
+        }
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("highlight");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("highlight");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("highlight");
+
+            let word = e.dataTransfer.getData("text");
+            let element = document.querySelector(`.word.hidden`);
+            if (element) {
+                moveToDropZone(element);
+            }
+        });
+
+        function moveToDropZone(element) {
+            if (element) {
+                element.classList.remove("hidden");
+                element.draggable = false;
+                element.style.cursor = "pointer";
+                dropZone.appendChild(element);
+                element.addEventListener("click", () => removeWord(element));
+            }
+        }
+
+        function removeWord(element) {
+            element.remove();
+            wordsContainer.appendChild(createWordElement(element.textContent));
+        }
+
+        function createHeart() {
+            let heart = document.createElement("div");
+            heart.classList.add("heart");
+            document.body.appendChild(heart);
+            heart.style.left = `${Math.random() * 100}vw`;
+            heart.style.animationDuration = `${Math.random() * 2 + 3}s`;
+            setTimeout(() => {
+                heart.remove();
+            }, 3000);
+        }
+
+        function checkCompletion() {
+            let wordsInZone = Array.from(dropZone.children).map(e => e.textContent.trim()).join(" ");
+            let correctPhrase = phrases[currentPhraseIndex];
+            if (wordsInZone === correctPhrase) {
+                message.textContent = "✨ ¡Perfecto! ¡Eres un genio romántico! ✨";
+                message.style.color = "gold";
+                showCompletionEffect();
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(createHeart, i * 100);
+                }
+            } else {
+                message.textContent = "😂 ¡Uy! Eso sonó un poco raro, intenta de nuevo. ❤️";
+                message.style.color = "white";
+            }
+        }
+
+        function showCompletionEffect() {
+            dropZone.classList.add("effect");
+            setTimeout(() => {
+                dropZone.classList.remove("effect");
+                if (currentPhraseIndex < phrases.length - 1) {
+                    currentPhraseIndex++;
+                    initializeWords();
+                } else {
+                    showFinalEffect();
+                }
+            }, 4000);
+        }
+
+        function showFinalEffect() {
+            dropZone.innerHTML = "❤️ ¡Mensaje completo! ❤️";
+            dropZone.style.fontSize = "2rem";
+            dropZone.style.color = "gold";
+            dropZone.style.animation = "glow 1s infinite alternate";
+        }
+
+        resetButton.addEventListener("click", () => {
+            currentPhraseIndex = 0;
+            initializeWords();
+        });
+
+        checkButton.addEventListener("click", checkCompletion);
+
+        initializeWords();
+    </script>
+</body>
+</html>
