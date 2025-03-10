@@ -58,7 +58,7 @@
         .button {
             background: #ff6b81;
             color: white;
-            padding: 10px 20px;
+            padding: 10px 10px;
             font-size: 1.2rem;
             border: none;
             border-radius: 10px;
@@ -115,15 +115,23 @@
                 transform: translateY(-100px) rotate(-45deg);
             }
         }
+        #reset-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
     </style>
 </head>
 <body>
-    <h2>Arrastra o toca las palabras para formar el mensaje</h2>
+    <div id="reset-container">
+        <button class="button" id="reset-game-button">Reiniciar</button>
+    </div>
+    <h2 style="margin-top: 50px">Arrastra o toca las palabras para formar el mensaje</h2>
     <div class="container" id="words-container"></div>
     <div class="drop-zone" id="drop-zone">Suelta o toca aquí</div>
     
     <div class="button-container">
-        <button class="button" id="reset-button">Desacomodar</button>
+        <button class="button" id="remove-last-button">Desacomodar</button>
         <button class="button" id="check-button">Comprobar</button>
     </div>
 
@@ -137,7 +145,8 @@
         let currentPhraseIndex = 0;
         const wordsContainer = document.getElementById("words-container");
         const dropZone = document.getElementById("drop-zone");
-        const resetButton = document.getElementById("reset-button");
+        const resetGameButton = document.getElementById("reset-game-button");
+        const removeLastButton = document.getElementById("remove-last-button");
         const checkButton = document.getElementById("check-button");
         const message = document.getElementById("message");
 
@@ -272,11 +281,19 @@
             dropZone.style.animation = "glow 1s infinite alternate";
         }
 
-        resetButton.addEventListener("click", () => {
+        removeLastButton.addEventListener("click", () => {
+            const lastWord = dropZone.lastElementChild;
+            if (lastWord) {
+                removeWord(lastWord);
+            }
+        });
+
+        resetGameButton.addEventListener("click", () => {
             currentPhraseIndex = 0;
             initializeWords();
         });
 
+       
         checkButton.addEventListener("click", checkCompletion);
 
         initializeWords();
